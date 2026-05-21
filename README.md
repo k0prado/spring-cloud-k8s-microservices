@@ -32,3 +32,33 @@ The ecosystem is divided into the following infrastructure and business microser
 Navigate to the root directory of each microservice and execute the command to build the project and generate the `.jar` package:
 ```bash
 ./mvnw clean package -DskipTests
+```
+
+## Desenvolvimento rápido com Docker (hot-reload)
+
+Para um fluxo de desenvolvimento ágil sem precisar derrubar o container toda hora, use o modo dev que roda o `mvn spring-boot:run` dentro de um container com o código montado por volume e com `spring-boot-devtools` habilitado.
+
+- Dependências: verifique que `spring-boot-devtools` está presente em `pom.xml`.
+- Arquivos relevantes: `docker-compose.yml` (produção) e `docker-compose.dev.yml` (desenvolvimento).
+
+Comandos úteis (PowerShell):
+```powershell
+# Build de produção (igual ao está a falhar no Dockerfile)
+docker compose -f docker-compose.yml build
+
+# Modo desenvolvimento com hot-reload (recomendado)
+docker compose -f docker-compose.dev.yml up --build
+
+# Forçar compilação dentro do container (o DevTools detecta mudanças e reinicia)
+docker compose -f docker-compose.dev.yml exec ecom-app-dev mvn -DskipTests compile
+
+# Se precisar ver logs completos do build com saída plain
+docker compose -f docker-compose.yml build --progress=plain
+```
+
+Dicas:
+- Edite o código no host; com `docker-compose.dev.yml` o projeto é montado em `/workspace` dentro do container e alterações de código são visíveis imediatamente.
+- Após editar, executar `mvn -DskipTests compile` dentro do container recompila classes e dispara o restart automático do Spring via DevTools.
+- Rebuild da imagem (`--build`) só é necessário quando alterar dependências ou o `Dockerfile`.
+
+Se o `docker compose -f docker-compose.yml build` continuar falhando, cole aqui a saída do comando (use `--progress=plain`) e eu corrijo o erro detalhadamente.
