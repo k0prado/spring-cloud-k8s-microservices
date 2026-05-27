@@ -1,35 +1,43 @@
 package com.ecom.app;
 
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class UserService {
 
-     private final List<User> userList = new ArrayList<>();
-     private Long id = 1L;
+    private final UserRepository userRepository;
     
+   
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     public List<User> fetchAllUsers() {
-        return userList;
+        return userRepository.findAll();
     }
 
     public Optional<User> fetchUser(Long id) {
-        return userList.stream().filter(user -> user.getId().equals(id)).findFirst();
+        return userRepository.findById(id);
     }
 
     public void addUser(User user) {
-        user.setId(id++);
-        userList.add(user);
+        userRepository.save(user);
     }
 
     public Boolean editUser(Long id, User user){
-        return userList.stream().filter(userE -> userE.getId().equals(id)).findFirst().map(userE-> {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User userE = userOptional.get();
             userE.setName(user.getName());
             userE.setLastName(user.getLastName());
+            userRepository.save(userE);
             return true;
-        }).orElse(false);
+        }
+        return false;
     }
     
 }
